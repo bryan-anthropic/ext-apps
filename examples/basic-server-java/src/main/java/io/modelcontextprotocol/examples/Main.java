@@ -2,7 +2,7 @@ package io.modelcontextprotocol.examples;
 
 import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapperSupplier;
-import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
+import io.modelcontextprotocol.server.transport.HttpServletStatelessServerTransport;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,11 +41,11 @@ public class Main {
 
     static void runHttp(McpJsonMapper jsonMapper) throws Exception {
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "3001"));
-        var transport = HttpServletStreamableServerTransportProvider.builder()
+        var transport = HttpServletStatelessServerTransport.builder()
                 .jsonMapper(jsonMapper)
                 .build();
 
-        Server.createServer(transport);
+        Server.createStatelessServer(transport);
 
         var context = new ServletContextHandler();
         context.addFilter(new FilterHolder(new CorsFilter()), "/*", EnumSet.of(DispatcherType.REQUEST));
