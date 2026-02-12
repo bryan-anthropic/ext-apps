@@ -88,7 +88,8 @@ The [`examples/`](https://github.com/modelcontextprotocol/ext-apps/tree/main/exa
 
 | | |
 |:---:|:---|
-| [![Basic](examples/basic-server-react/grid-cell.png "Starter template")](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-react) | The same app built with different frameworks — pick your favorite!<br><br>[React](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-react) · [Vue](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-vue) · [Svelte](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-svelte) · [Preact](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-preact) · [Solid](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-solid) · [Vanilla JS](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-vanillajs) · [Java](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-java) |
+| [![Basic](examples/basic-server-react/grid-cell.png "Starter template")](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-react) | The same app built with different frameworks — pick your favorite!<br><br>[React](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-react) · [Vue](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-vue) · [Svelte](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-svelte) · [Preact](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-preact) · [Solid](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-solid) · [Vanilla JS](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-server-vanillajs) |
+| [![Basic](examples/basic-server-react/grid-cell.png "Inlined Java")](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/inlined-server-java) | [**Inlined Java**](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/inlined-server-java) — MCP App server in Java with the UI inlined as an HTML string (no frontend build step). Loads the SDK from CDN. |
 <!-- prettier-ignore-end -->
 
 ### Running the Examples
@@ -98,7 +99,7 @@ The [`examples/`](https://github.com/modelcontextprotocol/ext-apps/tree/main/exa
 Most examples require only Node.js 18+. A few have additional requirements:
 
 - **Python examples** (`qr-server`, `say-server`): [uv](https://docs.astral.sh/uv/getting-started/installation/)
-- **Java example** (`basic-server-java`): Java 17+ and Maven 3.6+
+- **Java example** (`inlined-server-java`): Java 17+ and Maven 3.6+
 
 #### With basic-host
 
@@ -317,7 +318,7 @@ To use these examples with MCP clients that support the stdio transport (such as
       "command": "bash",
       "args": [
         "-c",
-        "cd /path/to/ext-apps/examples/basic-server-java && mvn -B package -DskipTests -q >&2 && java -jar target/basic-server-java-1.0.0.jar --stdio"
+        "cd /path/to/ext-apps/examples/inlined-server-java && mvn -B package -DskipTests -q >&2 && java -jar target/inlined-server-java-1.0.0.jar --stdio"
       ]
     },
     "qr": {
@@ -502,7 +503,7 @@ Then configure your MCP client to build and run the local server. Replace `~/cod
       "command": "bash",
       "args": [
         "-c",
-        "cd ~/code/ext-apps/examples/basic-server-java && mvn -B package -DskipTests -q >&2 && java -jar target/basic-server-java-1.0.0.jar --stdio"
+        "cd ~/code/ext-apps/examples/inlined-server-java && mvn -B package -DskipTests -q >&2 && java -jar target/inlined-server-java-1.0.0.jar --stdio"
       ]
     },
     "qr": {

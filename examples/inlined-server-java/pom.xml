@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.modelcontextprotocol.examples</groupId>
-  <artifactId>basic-server-java</artifactId>
+  <artifactId>inlined-server-java</artifactId>
   <version>1.0.0</version>
   <packaging>jar</packaging>
 
@@ -24,7 +24,7 @@
       <version>0.17.2</version>
     </dependency>
 
-    <!-- Embedded Jetty for serving the SSE/HTTP transport -->
+    <!-- Embedded Jetty for serving the HTTP transport -->
     <dependency>
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-server</artifactId>
