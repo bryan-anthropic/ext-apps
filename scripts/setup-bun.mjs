@@ -1,7 +1,4 @@
 #!/usr/bin/env node
-// Immediate log to verify script execution
-console.log("[setup-bun] Script loaded");
-
 /**
  * Postinstall script to set up bun from platform-specific optional dependencies.
  * Handles Windows ARM64 by downloading x64-baseline via emulation.
@@ -16,7 +13,7 @@ import {
   writeFileSync,
   statSync,
 } from "fs";
-import { join, dirname } from "path";
+import { join, dirname, resolve } from "path";
 import { spawnSync } from "child_process";
 import { fileURLToPath } from "url";
 import { get } from "https";
@@ -24,6 +21,15 @@ import { createGunzip } from "zlib";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, "..");
+
+// Skip when installed as a dependency (INIT_CWD is the user's project directory,
+// not the package root). Bun is a dev-only build tool not needed by SDK consumers.
+if (process.env.INIT_CWD && resolve(process.env.INIT_CWD) !== resolve(projectRoot)) {
+  process.exit(0);
+}
+
+// Immediate log to verify script execution
+console.log("[setup-bun] Script loaded");
 const nodeModules = join(projectRoot, "node_modules");
 const binDir = join(nodeModules, ".bin");
 
