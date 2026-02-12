@@ -678,6 +678,19 @@ describe("App <-> AppBridge integration", () => {
       expect(result.content).toEqual(resultContent);
     });
 
+    it("callServerTool throws a helpful error when called with a string instead of params object", async () => {
+      await bridge.connect(bridgeTransport);
+      await app.connect(appTransport);
+
+      await expect(
+        // @ts-expect-error intentionally testing wrong usage
+        app.callServerTool("my_tool"),
+      ).rejects.toThrow(
+        'callServerTool() expects an object as its first argument, but received a string ("my_tool"). ' +
+          'Did you mean: callServerTool({ name: "my_tool", arguments: { ... } })?',
+      );
+    });
+
     it("onlistresources setter registers handler for resources/list requests", async () => {
       const requestParams = {};
       const resources = [{ uri: "test://resource", name: "Test" }];

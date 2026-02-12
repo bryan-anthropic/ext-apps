@@ -724,6 +724,12 @@ export class App extends Protocol<AppRequest, AppNotification, AppResult> {
     params: CallToolRequest["params"],
     options?: RequestOptions,
   ): Promise<CallToolResult> {
+    if (typeof params === "string") {
+      throw new Error(
+        `callServerTool() expects an object as its first argument, but received a string ("${params}"). ` +
+          `Did you mean: callServerTool({ name: "${params}", arguments: { ... } })?`,
+      );
+    }
     return await this.request(
       { method: "tools/call", params },
       CallToolResultSchema,
