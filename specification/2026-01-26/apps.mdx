@@ -276,11 +276,15 @@ The resource content is returned via `resources/read`:
 
   ```
   default-src 'none';
-  script-src 'self' 'unsafe-inline';
-  style-src 'self' 'unsafe-inline';
-  img-src 'self' data:;
-  media-src 'self' data:;
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data:;
+  style-src 'self' 'unsafe-inline' blob: data:;
+  img-src 'self' data: blob:;
+  font-src 'self' data: blob:;
+  media-src 'self' data: blob:;
   connect-src 'none';
+  worker-src 'self' blob:;
+  object-src 'none';
+  base-uri 'self';
   ```
 
 - **No Loosening:** Host MAY further restrict but MUST NOT allow undeclared domains
@@ -1732,12 +1736,13 @@ const permissions = resource._meta?.ui?.permissions;
 
 const cspValue = `
   default-src 'none';
-  script-src 'self' 'unsafe-inline' ${csp?.resourceDomains?.join(' ') || ''};
-  style-src 'self' 'unsafe-inline' ${csp?.resourceDomains?.join(' ') || ''};
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: data: ${csp?.resourceDomains?.join(' ') || ''};
+  style-src 'self' 'unsafe-inline' blob: data: ${csp?.resourceDomains?.join(' ') || ''};
   connect-src 'self' ${csp?.connectDomains?.join(' ') || ''};
-  img-src 'self' data: ${csp?.resourceDomains?.join(' ') || ''};
-  font-src 'self' ${csp?.resourceDomains?.join(' ') || ''};
-  media-src 'self' data: ${csp?.resourceDomains?.join(' ') || ''};
+  img-src 'self' data: blob: ${csp?.resourceDomains?.join(' ') || ''};
+  font-src 'self' data: blob: ${csp?.resourceDomains?.join(' ') || ''};
+  media-src 'self' data: blob: ${csp?.resourceDomains?.join(' ') || ''};
+  worker-src 'self' blob: ${csp?.resourceDomains?.join(' ') || ''};
   frame-src ${csp?.frameDomains?.join(' ') || "'none'"};
   object-src 'none';
   base-uri ${csp?.baseUriDomains?.join(' ') || "'self'"};
