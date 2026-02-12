@@ -4,7 +4,7 @@
  * Renders interactive 3D scenes using Three.js with streaming code preview.
  * Receives all MCP App props from the wrapper.
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
@@ -203,8 +203,12 @@ export default function ThreeJSApp({
   sendMessage: _sendMessage,
   openLink: _openLink,
   sendLog: _sendLog,
+  requestDisplayMode,
 }: ThreeJSAppProps) {
   const [error, setError] = useState<string | null>(null);
+  const [currentDisplayMode, setCurrentDisplayMode] = useState<
+    "inline" | "fullscreen"
+  >("inline");
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animControllerRef = useRef<ReturnType<
@@ -223,6 +227,36 @@ export default function ThreeJSApp({
     paddingBottom: safeAreaInsets?.bottom,
     paddingLeft: safeAreaInsets?.left,
   };
+
+  const canFullscreen =
+    hostContext?.availableDisplayModes?.includes("fullscreen") ?? false;
+  const isFullscreen = currentDisplayMode === "fullscreen";
+
+  // Sync display mode from host context
+  useEffect(() => {
+    if (hostContext?.displayMode) {
+      setCurrentDisplayMode(hostContext.displayMode as "inline" | "fullscreen");
+    }
+  }, [hostContext?.displayMode]);
+
+  const toggleFullscreen = useCallback(async () => {
+    const newMode = isFullscreen ? "inline" : "fullscreen";
+    try {
+      const result = await requestDisplayMode({ mode: newMode });
+      setCurrentDisplayMode(result.mode as "inline" | "fullscreen");
+    } catch {
+      // ignore
+    }
+  }, [isFullscreen, requestDisplayMode]);
+
+  // Escape key exits fullscreen
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isFullscreen) toggleFullscreen();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [isFullscreen, toggleFullscreen]);
 
   // Visibility-based pause/play
   useEffect(() => {
@@ -269,7 +303,7 @@ export default function ThreeJSApp({
   return (
     <div
       ref={containerRef}
-      className="threejs-container"
+      className={`threejs-container${isFullscreen ? " fullscreen" : ""}`}
       style={containerStyle}
     >
       <canvas
@@ -283,6 +317,30 @@ export default function ThreeJSApp({
         }}
       />
       {error && <div className="error-overlay">Error: {error}</div>}
+      <button
+        className={`fullscreen-btn${canFullscreen ? " available" : ""}`}
+        title={isFullscreen ? "Exit fullscreen" : "Toggle fullscreen"}
+        onClick={toggleFullscreen}
+      >
+        <svg
+          className="expand-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+        </svg>
+        <svg
+          className="collapse-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
+          <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
+        </svg>
+      </button>
     </div>
   );
 }
