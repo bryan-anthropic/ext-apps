@@ -57,9 +57,18 @@
             <button id="zoom-in-btn" class="zoom-btn" title="Zoom in (+)">
               +
             </button>
+            <button id="search-btn" class="search-btn" title="Search (Ctrl+F)"></button>
             <button id="fullscreen-btn" class="fullscreen-btn" title="Toggle fullscreen">
               ⛶
             </button>
+          </div>
+          <!-- Compact search popover anchored to toolbar-right -->
+          <div id="search-bar" class="search-bar" style="display: none">
+            <input id="search-input" class="search-input" type="text" placeholder="Search..." autocomplete="off" />
+            <span id="search-match-count" class="search-match-count"></span>
+            <button id="search-prev-btn" class="search-nav-btn" title="Previous (Shift+Enter)">&#x25B2;</button>
+            <button id="search-next-btn" class="search-nav-btn" title="Next (Enter)">&#x25BC;</button>
+            <button id="search-close-btn" class="search-nav-btn" title="Close (Esc)">&#x2715;</button>
           </div>
         </div>
 
@@ -67,6 +76,7 @@
         <div class="canvas-container">
           <div class="page-wrapper">
             <canvas id="pdf-canvas"></canvas>
+            <div id="highlight-layer" class="highlight-layer"></div>
             <div id="text-layer" class="text-layer"></div>
           </div>
         </div>
