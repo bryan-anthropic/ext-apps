@@ -36,7 +36,6 @@ const log = {
 
 // State
 let pdfDocument: pdfjsLib.PDFDocumentProxy | null = null;
-let pdfBytes: Uint8Array | null = null;
 let currentPage = 1;
 let totalPages = 0;
 let scale = 1.0;
@@ -367,6 +366,9 @@ async function renderPage() {
   isRendering = true;
   pendingPage = null;
 
+  // Show loading overlay while page data is being fetched
+  showPageLoadingOverlay();
+
   try {
     const pageToRender = currentPage;
     const page = await pdfDocument.getPage(pageToRender);
@@ -430,12 +432,14 @@ async function renderPage() {
     });
     await textLayer.render();
 
+    hidePageLoadingOverlay();
     updateControls();
     updatePageContext();
 
     // Request host to resize app to fit content (inline mode only)
     requestFitToContent();
   } catch (err) {
+    hidePageLoadingOverlay();
     log.error("Error rendering page:", err);
     showError(`Failed to render page ${currentPage}`);
   } finally {
@@ -675,6 +679,10 @@ interface PdfBytesChunk {
   hasMore: boolean;
 }
 
+// Range request caching - avoid duplicate fetches for the same range
+const rangeCache = new Map<string, Uint8Array>();
+const PENDING_RANGES = new Set<string>();
+
 // Update progress bar
 function updateProgress(loaded: number, total: number) {
   const percent = Math.round((loaded / total) * 100);
@@ -682,28 +690,77 @@ function updateProgress(loaded: number, total: number) {
   progressTextEl.textContent = `${(loaded / 1024).toFixed(0)} KB / ${(total / 1024).toFixed(0)} KB (${percent}%)`;
 }
 
-// Load PDF in chunks with progress
-async function loadPdfInChunks(urlToLoad: string): Promise<Uint8Array> {
-  const chunks: Uint8Array[] = [];
-  let offset = 0;
-  let totalBytes = 0;
-  let hasMore = true;
+// Page loading overlay state
+let pageLoadingOverlay: HTMLElement | null = null;
 
-  // Show progress UI
-  progressContainerEl.style.display = "block";
-  updateProgress(0, 1);
+function showPageLoadingOverlay() {
+  if (pageLoadingOverlay) return; // Already showing
 
-  while (hasMore) {
+  // Create loading overlay for the page
+  const overlay = document.createElement("div");
+  overlay.className = "page-loading-overlay";
+  overlay.innerHTML = `
+    <div class="page-loading-content">
+      <div class="page-loading-spinner"></div>
+      <span class="page-loading-text">Loading page...</span>
+    </div>
+  `;
+  canvasContainerEl.appendChild(overlay);
+  pageLoadingOverlay = overlay;
+}
+
+function hidePageLoadingOverlay() {
+  if (pageLoadingOverlay) {
+    pageLoadingOverlay.remove();
+    pageLoadingOverlay = null;
+  }
+}
+
+/**
+ * Fetch a byte range from the PDF using the backend tool.
+ * Caches results to avoid duplicate requests.
+ */
+async function fetchRange(
+  url: string,
+  begin: number,
+  end: number,
+): Promise<Uint8Array> {
+  const cacheKey = `${url}:${begin}-${end}`;
+  const cached = rangeCache.get(cacheKey);
+  if (cached) {
+    log.info(`Range cache hit: ${begin}-${end}`);
+    return cached;
+  }
+
+  // Avoid duplicate in-flight requests
+  const pendingKey = `${url}:${begin}-${end}`;
+  if (PENDING_RANGES.has(pendingKey)) {
+    // Wait for existing request to complete
+    await new Promise((resolve) => {
+      const checkInterval = setInterval(() => {
+        if (!PENDING_RANGES.has(pendingKey)) {
+          clearInterval(checkInterval);
+          resolve(undefined);
+        }
+      }, 10);
+    });
+    const result = rangeCache.get(cacheKey);
+    if (result) return result;
+  }
+
+  PENDING_RANGES.add(pendingKey);
+
+  try {
+    log.info(`Fetching range: ${begin}-${end} (${end - begin} bytes)`);
     const result = await app.callServerTool({
       name: "read_pdf_bytes",
-      arguments: { url: urlToLoad, offset, byteCount: CHUNK_SIZE },
+      arguments: { url, offset: begin, byteCount: end - begin },
     });
 
-    // Check for errors
     if (result.isError) {
       const errorText = result.content
         ?.map((c) => ("text" in c ? c.text : ""))
-        .join(" ");
+        .join(" ") || "";
       throw new Error(`Tool error: ${errorText}`);
     }
 
@@ -712,37 +769,95 @@ async function loadPdfInChunks(urlToLoad: string): Promise<Uint8Array> {
     }
 
     const chunk = result.structuredContent as unknown as PdfBytesChunk;
-    totalBytes = chunk.totalBytes;
-    hasMore = chunk.hasMore;
-
-    // Decode base64 chunk
     const binaryString = atob(chunk.bytes);
     const bytes = new Uint8Array(binaryString.length);
     for (let i = 0; i < binaryString.length; i++) {
       bytes[i] = binaryString.charCodeAt(i);
     }
-    chunks.push(bytes);
 
-    offset += chunk.byteCount;
-    updateProgress(offset, totalBytes);
+    // Cache the result
+    rangeCache.set(cacheKey, bytes);
+    return bytes;
+  } finally {
+    PENDING_RANGES.delete(pendingKey);
   }
+}
 
-  // Combine all chunks
-  const fullPdf = new Uint8Array(totalBytes);
-  let pos = 0;
-  for (const chunk of chunks) {
-    fullPdf.set(chunk, pos);
-    pos += chunk.length;
-  }
+/**
+ * Load PDF progressively using PDFDataRangeTransport.
+ * PDF.js will request ranges as needed to render pages.
+ */
+async function loadPdfProgressively(urlToLoad: string): Promise<{
+  document: pdfjsLib.PDFDocumentProxy;
+  totalBytes: number;
+}> {
+  // Show progress UI
+  progressContainerEl.style.display = "block";
+  updateProgress(0, 1);
 
-  log.info(
-    `PDF loaded: ${(totalBytes / 1024).toFixed(0)} KB in ${chunks.length} chunks`,
+  // First, fetch initial data to get PDF header/trailer
+  // Start with a reasonably small chunk to get document structure quickly
+  const initialChunkSize = Math.min(CHUNK_SIZE, 512 * 1024); // Up to 512KB initial
+  const initialData = await fetchRange(urlToLoad, 0, initialChunkSize);
+  updateProgress(initialData.length, initialChunkSize);
+
+  // Track loading state
+  let totalBytes = initialChunkSize;
+  let loadedBytes = initialData.length;
+
+  // Create PDFDataRangeTransport with range callback
+  // PDF.js v5 API: new PDFDataRangeTransport(length, initialData, options)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const transport = new pdfjsLib.PDFDataRangeTransport(
+    initialData.length,
+    initialData,
+    {
+      // PDF.js calls this when it needs data beyond what we've provided
+      // Note: The range callback is invoked by PDF.js, we need to provide
+      // data back by calling onDataRange (synchronously) or using the
+      // requestDataRange pattern (async).
+      range: (begin: number, end: number) => {
+        // Initiate async fetch - data will be delivered via onDataRange
+        fetchRange(urlToLoad, begin, end)
+          .then((data) => {
+            // Deliver data to PDF.js via onDataRange
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (transport as any).onDataRange(begin, data);
+            loadedBytes = Math.max(loadedBytes, end);
+            updateProgress(loadedBytes, totalBytes);
+          })
+          .catch((err: unknown) => {
+            log.error(`Error fetching range ${begin}-${end}:`, err);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (transport as any).onDataError(err as Error);
+          });
+      },
+      // Progress callback for streaming updates
+      progress: (progress: { loaded: number; total: number }) => {
+        totalBytes = progress.total;
+        loadedBytes = progress.loaded;
+        updateProgress(loadedBytes, totalBytes);
+      },
+    } as any,
   );
-  return fullPdf;
+
+  // Load document with transport
+  const loadingTask = pdfjsLib.getDocument(transport);
+
+  try {
+    const document = await loadingTask.promise;
+    totalBytes = (document as { _pdfInfo?: { contentLength?: number } })._pdfInfo?.contentLength || totalBytes;
+    log.info(`PDF document ready, ${document.numPages} pages, ${totalBytes} bytes`);
+    updateProgress(totalBytes, totalBytes);
+    return { document, totalBytes };
+  } catch (err: unknown) {
+    log.error("Error loading PDF document:", err);
+    throw err;
+  }
 }
 
 // Handle tool result
-app.ontoolresult = async (result) => {
+app.ontoolresult = async (result: CallToolResult) => {
   log.info("Received tool result:", result);
 
   const parsed = parseToolResult(result);
@@ -753,7 +868,8 @@ app.ontoolresult = async (result) => {
 
   pdfUrl = parsed.url;
   pdfTitle = parsed.title;
-  totalPages = parsed.pageCount;
+  // Note: pageCount may not be accurate until document loads
+  totalPages = parsed.pageCount || 1;
   viewUUID = result._meta?.viewUUID ? String(result._meta.viewUUID) : undefined;
 
   // Restore saved page or use initial page
@@ -764,23 +880,22 @@ app.ontoolresult = async (result) => {
   log.info(
     "URL:",
     pdfUrl,
-    "Pages:",
-    parsed.pageCount,
-    "Starting:",
+    "Starting at page:",
     currentPage,
   );
 
   showLoading("Loading PDF...");
 
   try {
-    pdfBytes = await loadPdfInChunks(pdfUrl);
+    // Use progressive loading - document available as soon as initial data arrives
+    const { document, totalBytes } = await loadPdfProgressively(pdfUrl);
+    pdfDocument = document;
+    totalPages = document.numPages;
 
-    showLoading("Rendering PDF...");
+    log.info("PDF loaded, pages:", totalPages, "bytes:", totalBytes);
 
-    pdfDocument = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
-    totalPages = pdfDocument.numPages;
-
-    log.info("PDF loaded, pages:", totalPages);
+    // Clear range cache for new PDF
+    rangeCache.clear();
 
     showViewer();
     renderPage();
@@ -790,7 +905,7 @@ app.ontoolresult = async (result) => {
   }
 };
 
-app.onerror = (err) => {
+app.onerror = (err: unknown) => {
   log.error("App error:", err);
   showError(err instanceof Error ? err.message : String(err));
 };
