@@ -32,11 +32,11 @@ public class Server {
               <script type="module">
                 import { App } from 'https://unpkg.com/@modelcontextprotocol/ext-apps@1.0.1/dist/src/app-with-deps.js';
                 const app = new App({ name: 'get-time-app', version: '1.0.0' });
-                app.ontoolinput = ({ toolInput }) => {
+                app.ontoolresult = (result) => {
                   document.getElementById('time').textContent =
-                    toolInput.structuredContent?.time ?? toolInput.content?.[0]?.text ?? '?';
+                    result.structuredContent?.time ?? result.content?.[0]?.text ?? '?';
                 };
-                app.connect();
+                await app.connect();
               </script>
             </body>
             </html>
