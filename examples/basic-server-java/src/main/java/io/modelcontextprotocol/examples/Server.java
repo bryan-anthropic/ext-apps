@@ -4,6 +4,7 @@ import io.modelcontextprotocol.server.McpServer;
 import io.modelcontextprotocol.server.McpServerFeatures;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpServerTransportProvider;
+import io.modelcontextprotocol.spec.McpStreamableServerTransportProvider;
 
 import java.time.Instant;
 import java.util.List;
@@ -42,6 +43,14 @@ public class Server {
             """;
 
     static void createServer(McpServerTransportProvider transport) {
+        configureServer(McpServer.sync(transport));
+    }
+
+    static void createServer(McpStreamableServerTransportProvider transport) {
+        configureServer(McpServer.sync(transport));
+    }
+
+    private static void configureServer(McpServer.SyncSpecification<?> spec) {
         var tool = new McpServerFeatures.SyncToolSpecification(
                 McpSchema.Tool.builder()
                         .name("get-time")
@@ -70,8 +79,7 @@ public class Server {
                 ))
         );
 
-        McpServer.sync(transport)
-                .serverInfo("basic-server-java", "1.0.0")
+        spec.serverInfo("basic-server-java", "1.0.0")
                 .capabilities(McpSchema.ServerCapabilities.builder()
                         .tools(true)
                         .resources(false, false)

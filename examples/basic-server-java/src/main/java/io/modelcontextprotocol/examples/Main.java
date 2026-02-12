@@ -2,7 +2,7 @@ package io.modelcontextprotocol.examples;
 
 import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.json.jackson.JacksonMcpJsonMapperSupplier;
-import io.modelcontextprotocol.server.transport.HttpServletSseServerTransportProvider;
+import io.modelcontextprotocol.server.transport.HttpServletStreamableServerTransportProvider;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,21 +41,20 @@ public class Main {
 
     static void runHttp(McpJsonMapper jsonMapper) throws Exception {
         int port = Integer.parseInt(System.getenv().getOrDefault("PORT", "3001"));
-        var transport = HttpServletSseServerTransportProvider.builder()
+        var transport = HttpServletStreamableServerTransportProvider.builder()
                 .jsonMapper(jsonMapper)
-                .messageEndpoint("/mcp/message")
                 .build();
 
         Server.createServer(transport);
 
         var context = new ServletContextHandler();
         context.addFilter(new FilterHolder(new CorsFilter()), "/*", EnumSet.of(DispatcherType.REQUEST));
-        context.addServlet(new ServletHolder(transport), "/*");
+        context.addServlet(new ServletHolder(transport), "/mcp");
 
         var server = new org.eclipse.jetty.server.Server(port);
         server.setHandler(context);
         server.start();
-        System.out.println("MCP server listening on http://localhost:" + port + "/sse");
+        System.out.println("MCP server listening on http://localhost:" + port + "/mcp");
         server.join();
     }
 
