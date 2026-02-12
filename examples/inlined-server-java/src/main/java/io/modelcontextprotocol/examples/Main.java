@@ -14,10 +14,10 @@ import java.util.EnumSet;
 import java.util.List;
 
 /**
- * Entry point for the basic-server-java MCP App example.
+ * Entry point for the inlined-server-java MCP App example.
  *
- * HTTP (default):  java -jar basic-server-java.jar
- * Stdio:           java -jar basic-server-java.jar --stdio
+ * HTTP (default):  java -jar inlined-server-java.jar
+ * Stdio:           java -jar inlined-server-java.jar --stdio
  */
 public class Main {
 

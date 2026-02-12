@@ -69,7 +69,7 @@ public class Server {
     /** Stateful server (stdio). */
     static void create(McpServerTransportProvider transport) {
         McpServer.sync(transport)
-                .serverInfo("basic-server-java", "1.0.0")
+                .serverInfo("inlined-server-java", "1.0.0")
                 .tools(new McpServerFeatures.SyncToolSpecification(TOOL, (ex, a) -> getTime()))
                 .resources(new McpServerFeatures.SyncResourceSpecification(RESOURCE, (ex, r) -> readResource()))
                 .build();
@@ -78,7 +78,7 @@ public class Server {
     /** Stateless server (HTTP, matches JS examples). */
     static void create(McpStatelessServerTransport transport) {
         McpServer.sync(transport)
-                .serverInfo("basic-server-java", "1.0.0")
+                .serverInfo("inlined-server-java", "1.0.0")
                 .tools(new McpStatelessServerFeatures.SyncToolSpecification(TOOL, (ctx, r) -> getTime()))
                 .resources(new McpStatelessServerFeatures.SyncResourceSpecification(RESOURCE, (ctx, r) -> readResource()))
                 .build();
