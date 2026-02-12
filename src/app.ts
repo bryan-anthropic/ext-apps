@@ -1112,6 +1112,11 @@ export class App extends Protocol<AppRequest, AppNotification, AppResult> {
     ),
     options?: RequestOptions,
   ): Promise<void> {
+    if (this.transport) {
+      throw new Error(
+        "App is already connected. Call close() before connecting again.",
+      );
+    }
     await super.connect(transport);
 
     try {

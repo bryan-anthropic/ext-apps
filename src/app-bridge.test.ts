@@ -615,6 +615,73 @@ describe("App <-> AppBridge integration", () => {
     });
   });
 
+  describe("double-connect guard", () => {
+    it("AppBridge.connect() throws if already connected", async () => {
+      await bridge.connect(bridgeTransport);
+      await app.connect(appTransport);
+
+      // Attempting to connect again with a different transport should throw
+      const [, secondBridgeTransport] = InMemoryTransport.createLinkedPair();
+      await expect(bridge.connect(secondBridgeTransport)).rejects.toThrow(
+        "AppBridge is already connected",
+      );
+    });
+
+    it("App.connect() throws if already connected", async () => {
+      await bridge.connect(bridgeTransport);
+      await app.connect(appTransport);
+
+      // Attempting to connect again should throw
+      const [secondAppTransport] = InMemoryTransport.createLinkedPair();
+      await expect(app.connect(secondAppTransport)).rejects.toThrow(
+        "App is already connected",
+      );
+    });
+
+    it("double-connect on same transport would have caused unknown message ID errors", async () => {
+      // Regression test: before the double-connect guard was added, calling
+      // connect() twice on the same transport caused the MCP Protocol to chain
+      // onmessage handlers, processing each incoming message twice. This caused
+      // the second processing of a response to fail with "unknown message ID"
+      // because the first processing already consumed the response handler.
+      //
+      // This test verifies that the guard prevents this scenario entirely.
+      bridge.onupdatemodelcontext = async () => ({});
+
+      await bridge.connect(bridgeTransport);
+      await app.connect(appTransport);
+
+      // After close(), reconnection should be allowed
+      await bridgeTransport.close();
+      const [newAppTransport, newBridgeTransport] =
+        InMemoryTransport.createLinkedPair();
+      const newBridge = new AppBridge(
+        createMockClient() as Client,
+        testHostInfo,
+        testHostCapabilities,
+      );
+      const newApp = new App(testAppInfo, {}, { autoResize: false });
+
+      const errors: Error[] = [];
+      newBridge.onerror = (e) => errors.push(e);
+      newApp.onerror = (e) => errors.push(e);
+      newBridge.onupdatemodelcontext = async () => ({});
+
+      await newBridge.connect(newBridgeTransport);
+      await newApp.connect(newAppTransport);
+
+      // This request (id=1) should be processed exactly once
+      await newApp.updateModelContext({
+        content: [{ type: "text", text: "test" }],
+      });
+
+      expect(errors).toHaveLength(0);
+
+      await newAppTransport.close();
+      await newBridgeTransport.close();
+    });
+  });
+
   describe("ping", () => {
     it("App responds to ping from bridge", async () => {
       await bridge.connect(bridgeTransport);
