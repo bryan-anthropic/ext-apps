@@ -37,6 +37,8 @@ export interface ViewProps<TToolInput = Record<string, unknown>> {
   openLink: App["openLink"];
   /** Send log messages to the host */
   sendLog: App["sendLog"];
+  /** Request a display mode change (e.g. fullscreen) */
+  requestDisplayMode: App["requestDisplayMode"];
 }
 
 // =============================================================================
@@ -108,6 +110,10 @@ function McpAppWrapper() {
     (params) => app!.sendLog(params),
     [app],
   );
+  const requestDisplayMode = useCallback<App["requestDisplayMode"]>(
+    (params) => app!.requestDisplayMode(params),
+    [app],
+  );
 
   if (error) {
     return <div className="error">Error: {error.message}</div>;
@@ -127,6 +133,7 @@ function McpAppWrapper() {
       sendMessage={sendMessage}
       openLink={openLink}
       sendLog={sendLog}
+      requestDisplayMode={requestDisplayMode}
     />
   );
 }
