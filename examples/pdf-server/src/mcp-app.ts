@@ -868,10 +868,15 @@ pageInputEl.addEventListener("keydown", (e) => {
 
 // Keyboard navigation
 document.addEventListener("keydown", (e) => {
-  // Ctrl/Cmd+F to open search
+  // Ctrl/Cmd+F: open our search if closed, otherwise let browser default through
   if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-    e.preventDefault();
-    openSearch();
+    if (!searchOpen) {
+      e.preventDefault();
+      openSearch();
+    } else if (!searchInputEl.value) {
+      closeSearch();
+      // don't preventDefault — let browser's native find open
+    }
     return;
   }
 
