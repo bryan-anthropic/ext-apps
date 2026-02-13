@@ -366,6 +366,7 @@ body {
 .search-bar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   padding: 0.375rem 1rem;
   background: var(--bg000);
   border-bottom: 1px solid var(--bg200);
