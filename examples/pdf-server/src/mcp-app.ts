@@ -289,12 +289,29 @@ function renderHighlights() {
     }
   }
 
-  // Scroll current highlight into view
+  // Scroll current highlight into view only if not already visible
   const currentHL = highlightLayerEl.querySelector(
     ".search-highlight.current",
   ) as HTMLElement;
-  if (currentHL)
-    currentHL.scrollIntoView({ block: "center", behavior: "smooth" });
+  if (currentHL) {
+    const scrollParent =
+      currentDisplayMode === "fullscreen"
+        ? document.querySelector(".canvas-container")
+        : null;
+    if (scrollParent) {
+      const sr = scrollParent.getBoundingClientRect();
+      const hr = currentHL.getBoundingClientRect();
+      if (hr.top < sr.top || hr.bottom > sr.bottom) {
+        currentHL.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    } else {
+      // Inline mode: check visibility in viewport
+      const hr = currentHL.getBoundingClientRect();
+      if (hr.top < 0 || hr.bottom > window.innerHeight) {
+        currentHL.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    }
+  }
 }
 
 function clearHighlights() {
