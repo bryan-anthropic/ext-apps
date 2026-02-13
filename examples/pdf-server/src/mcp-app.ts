@@ -302,13 +302,19 @@ function clearHighlights() {
 }
 
 function updateSearchUI() {
+  const hasQuery = searchQuery.length > 0;
   if (allMatches.length === 0) {
-    searchMatchCountEl.textContent = searchQuery ? "No matches" : "";
+    searchMatchCountEl.textContent = hasQuery ? "No matches" : "";
   } else {
     searchMatchCountEl.textContent = `${currentMatchIndex + 1} of ${allMatches.length}`;
   }
   searchPrevBtn.disabled = allMatches.length === 0;
   searchNextBtn.disabled = allMatches.length === 0;
+  // Hide nav controls when there's no query
+  const vis = hasQuery ? "" : "none";
+  searchMatchCountEl.style.display = vis;
+  searchPrevBtn.style.display = vis;
+  searchNextBtn.style.display = vis;
 }
 
 function openSearch() {
@@ -319,6 +325,7 @@ function openSearch() {
   }
   searchOpen = true;
   searchBarEl.style.display = "flex";
+  updateSearchUI();
   searchInputEl.focus();
   requestFitToContent();
   extractAllPageText();
