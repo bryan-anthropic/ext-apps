@@ -892,7 +892,7 @@ pageInputEl.addEventListener("keydown", (e) => {
 
 // Keyboard navigation
 document.addEventListener("keydown", (e) => {
-  // Ctrl/Cmd+F: open our search if closed, otherwise let browser default through
+  // Ctrl/Cmd+F: open our search if closed; if open and empty, close and let browser find through
   if ((e.ctrlKey || e.metaKey) && e.key === "f") {
     if (!searchOpen) {
       e.preventDefault();
@@ -900,6 +900,11 @@ document.addEventListener("keydown", (e) => {
     } else if (!searchInputEl.value) {
       closeSearch();
       // don't preventDefault — let browser's native find open
+    } else {
+      // Search is open with text — keep ours focused, don't open browser find
+      e.preventDefault();
+      searchInputEl.focus();
+      searchInputEl.select();
     }
     return;
   }
