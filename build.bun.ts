@@ -51,4 +51,7 @@ await Promise.all([
     outdir: "dist/src/server",
     external: ["@modelcontextprotocol/sdk"],
   }),
+  buildJs("src/incremental-json-parser.ts", {
+    outdir: "dist/src",
+  }),
 ]);

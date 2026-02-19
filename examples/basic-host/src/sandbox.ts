@@ -1,5 +1,6 @@
 import type { McpUiSandboxProxyReadyNotification, McpUiSandboxResourceReadyNotification } from "../../../dist/src/types";
 import { buildAllowAttribute } from "../../../dist/src/app-bridge";
+import { IncrementalJsonParser } from "../../../dist/src/incremental-json-parser";
 
 const ALLOWED_REFERRER_PATTERN = /^http:\/\/(localhost|127\.0\.0\.1)(:|\/|$)/;
 
@@ -52,6 +53,15 @@ const RESOURCE_READY_NOTIFICATION: McpUiSandboxResourceReadyNotification["method
   "ui/notifications/sandbox-resource-ready";
 const PROXY_READY_NOTIFICATION: McpUiSandboxProxyReadyNotification["method"] =
   "ui/notifications/sandbox-proxy-ready";
+const TOOL_INPUT_DELTA_METHOD = "ui/notifications/tool-input-delta";
+const TOOL_INPUT_PARTIAL_METHOD = "ui/notifications/tool-input-partial";
+const TOOL_INPUT_METHOD = "ui/notifications/tool-input";
+
+// Incremental JSON parser for healing streamed tool-input deltas.
+// When the host sends raw JSON text deltas (tool-input-delta), the sandbox
+// feeds them through this parser and forwards the healed result to the view
+// as a standard tool-input-partial notification.
+const jsonParser = new IncrementalJsonParser();
 
 // Message relay: This Sandbox (outer iframe) acts as a bidirectional bridge,
 // forwarding messages between:
@@ -106,6 +116,36 @@ window.addEventListener("message", async (event) => {
           console.warn("[Sandbox] document.write not available, falling back to srcdoc");
           inner.srcdoc = html;
         }
+      }
+    } else if (event.data && event.data.method === TOOL_INPUT_DELTA_METHOD) {
+      // Host sends raw JSON text deltas — feed into the incremental parser
+      // and forward healed result as tool-input-partial to the view.
+      const delta = event.data.params?.delta;
+      if (typeof delta === "string" && delta.length > 0) {
+        jsonParser.write(delta);
+        const healed = jsonParser.getHealed();
+        try {
+          const args = JSON.parse(healed);
+          if (inner?.contentWindow && typeof args === "object" && args !== null) {
+            inner.contentWindow.postMessage(
+              {
+                jsonrpc: "2.0",
+                method: TOOL_INPUT_PARTIAL_METHOD,
+                params: { arguments: args },
+              },
+              "*",
+            );
+          }
+        } catch {
+          // Healed output did not parse — skip this delta.
+        }
+      }
+    } else if (event.data && event.data.method === TOOL_INPUT_METHOD) {
+      // Complete tool input — reset the parser for the next tool call and
+      // relay the message to the view as-is.
+      jsonParser.reset();
+      if (inner?.contentWindow) {
+        inner.contentWindow.postMessage(event.data, "*");
       }
     } else {
       if (inner && inner.contentWindow) {
