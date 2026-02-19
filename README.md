@@ -1,15 +1,59 @@
-# @modelcontextprotocol/ext-apps
+<!-- LOGO -->
+<div align="center">
+  <img src="media/mcp.svg#gh-light-mode-only" alt="MCP Apps" width="128">
+  <img src="media/mcp-white.svg#gh-dark-mode-only" alt="MCP Apps" width="128">
+  <h1>MCP Apps</h1>
+  <p>
+    Build interactive UIs for MCP tools — charts, forms, dashboards — that render inline in any compliant chat client.
+    <br /><br />
+    <a href="#why-mcp-apps">Why</a>
+    ·
+    <a href="https://modelcontextprotocol.github.io/ext-apps/api/documents/Quickstart.html">Quickstart</a>
+    ·
+    <a href="https://modelcontextprotocol.github.io/ext-apps/api/">API Docs</a>
+    ·
+    <a href="https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx">Spec</a>
+    ·
+    <a href="CONTRIBUTING.md">Contributing</a>
+  </p>
+</div>
 
-[![npm version](https://img.shields.io/npm/v/@modelcontextprotocol/ext-apps.svg)](https://www.npmjs.com/package/@modelcontextprotocol/ext-apps) [![API Documentation](https://img.shields.io/badge/docs-API%20Reference-blue)](https://modelcontextprotocol.github.io/ext-apps/api/)
+<p align="center">
+  <a href="https://github.com/modelcontextprotocol/ext-apps/actions/workflows/ci.yml"><img src="https://github.com/modelcontextprotocol/ext-apps/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue" alt="License: Apache 2.0"></a>
+  <a href="https://www.npmjs.com/package/@modelcontextprotocol/ext-apps"><img src="https://img.shields.io/npm/v/@modelcontextprotocol/ext-apps.svg" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@modelcontextprotocol/ext-apps"><img src="https://img.shields.io/npm/dm/@modelcontextprotocol/ext-apps.svg" alt="npm downloads"></a>
+  <a href="https://github.com/modelcontextprotocol/ext-apps"><img src="https://img.shields.io/github/stars/modelcontextprotocol/ext-apps" alt="GitHub stars"></a>
+  <a href="https://modelcontextprotocol.github.io/ext-apps/api/"><img src="https://img.shields.io/badge/docs-API%20Reference-blue" alt="API Documentation"></a>
+</p>
 
-This repo contains the SDK and specification for MCP Apps Extension ([SEP-1865](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1865)).
+<p align="center">
+  <img src="media/claude-colorpicker-apps.gif" alt="MCP Apps demo" width="600">
+  <br><em>Color picker built with MCP Apps, running in Claude</em>
+</p>
+
+## Table of Contents
+
+- [Specification](#specification)
+- [Why MCP Apps?](#why-mcp-apps)
+- [How It Works](#how-it-works)
+- [Getting Started](#getting-started)
+- [Using the SDK](#using-the-sdk)
+- [Agent Skills](#agent-skills)
+- [Examples](#examples)
+- [Resources](#resources)
+- [Contributing](#contributing)
 
 ## Specification
+
+<div align="center">
 
 | Version        | Status      | Link                                                                                                                              |
 | -------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | **2026-01-26** | Stable      | [specification/2026-01-26/apps.mdx](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx) |
-| draft          | Development | [specification/draft/apps.mdx](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/draft/apps.mdx)           |
+| **draft**      | Development | [specification/draft/apps.mdx](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/draft/apps.mdx)           |
+
+</div>
 
 MCP Apps are a proposed standard inspired by [MCP-UI](https://mcpui.dev/) and [OpenAI's Apps SDK](https://developers.openai.com/apps-sdk/) to allow MCP Servers to display interactive UI elements in conversational MCP clients / chatbots.
 
@@ -28,34 +72,30 @@ MCP Apps extend the Model Context Protocol by letting tools declare UI resources
 3. **Host renders** — The host fetches the resource and displays it in a sandboxed iframe
 4. **Bidirectional communication** — The host passes tool data to the UI via notifications, and the UI can call other tools through the host
 
-## Using the SDK
-
-This SDK serves two audiences:
-
-### For App Developers
-
-Build interactive UIs that run inside MCP-enabled chat clients.
-
-- **SDK for Apps**: `@modelcontextprotocol/ext-apps` — [API Docs](https://modelcontextprotocol.github.io/ext-apps/api/modules/app.html)
-- **React hooks**: `@modelcontextprotocol/ext-apps/react` — [API Docs](https://modelcontextprotocol.github.io/ext-apps/api/modules/_modelcontextprotocol_ext-apps_react.html)
-
-### For Host Developers
-
-Embed and communicate with MCP Apps in your chat application.
-
-- **SDK for Hosts**: `@modelcontextprotocol/ext-apps/app-bridge` — [API Docs](https://modelcontextprotocol.github.io/ext-apps/api/modules/app-bridge.html)
-
-There's no _supported_ host implementation in this repo (beyond the [examples/basic-host](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-host) example).
-
-The [MCP-UI](https://github.com/idosal/mcp-ui) client SDK offers a fully-featured MCP Apps framework used by a few hosts. Clients may choose to use it or roll their own implementation.
-
-## Installation
+## Getting Started
 
 ```bash
 npm install -S @modelcontextprotocol/ext-apps
 ```
 
-### Install Agent Skills
+**New here?** Start with the [Quickstart Guide](https://modelcontextprotocol.github.io/ext-apps/api/documents/Quickstart.html) to build your first MCP App.
+
+## Using the SDK
+
+The SDK serves three roles: app developers building interactive Views, host developers embedding those Views, and MCP server authors registering tools with UI metadata.
+
+| Package | Purpose | Docs |
+|---------|---------|------|
+| `@modelcontextprotocol/ext-apps` | Build interactive Views (App class, PostMessageTransport) | [API Docs →](https://modelcontextprotocol.github.io/ext-apps/api/modules/app.html) |
+| `@modelcontextprotocol/ext-apps/react` | React hooks for Views (useApp, useHostStyles, etc.) | [API Docs →](https://modelcontextprotocol.github.io/ext-apps/api/modules/_modelcontextprotocol_ext-apps_react.html) |
+| `@modelcontextprotocol/ext-apps/app-bridge` | Embed and communicate with Views in your chat client | [API Docs →](https://modelcontextprotocol.github.io/ext-apps/api/modules/app-bridge.html) |
+| `@modelcontextprotocol/ext-apps/server` | Register tools and resources on your MCP server | [API Docs →](https://modelcontextprotocol.github.io/ext-apps/api/modules/server.html) |
+
+There's no _supported_ host implementation in this repo (beyond the [examples/basic-host](https://github.com/modelcontextprotocol/ext-apps/tree/main/examples/basic-host) example).
+
+The [MCP-UI](https://github.com/idosal/mcp-ui) client SDK offers a fully-featured MCP Apps framework used by a few hosts. Clients may choose to use it or roll their own implementation.
+
+## Agent Skills
 
 This repository provides two [Agent Skills](https://agentskills.io/) for building MCP Apps. You can install the skills as a Claude Code plugin:
 
@@ -512,3 +552,7 @@ This configuration rebuilds each server on launch, ensuring your local changes a
 - [API Documentation](https://modelcontextprotocol.github.io/ext-apps/api/)
 - [Specification (2026-01-26)](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx) ([Draft](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/draft/apps.mdx))
 - [SEP-1865 Discussion](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/1865)
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to get started, submit pull requests, and report issues.

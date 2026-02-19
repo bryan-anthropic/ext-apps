@@ -352,7 +352,7 @@ Create [`mcp-app.html`](https://github.com/modelcontextprotocol/ext-apps/blob/ma
 
 <!-- prettier-ignore -->
 ```html source="../examples/quickstart/mcp-app.html"
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />

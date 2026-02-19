@@ -1409,6 +1409,11 @@ export class AppBridge extends Protocol<
    * ```
    */
   async connect(transport: Transport) {
+    if (this.transport) {
+      throw new Error(
+        "AppBridge is already connected. Call close() before connecting again.",
+      );
+    }
     if (this._client) {
       // When a client was passed to the constructor, automatically forward
       // MCP requests/notifications between the view and the server

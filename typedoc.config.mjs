@@ -46,9 +46,6 @@ const config = {
     "./scripts/typedoc-plugin-fix-mermaid-entities.mjs",
     "@boneskull/typedoc-plugin-mermaid",
   ],
-  // Remove once typedoc-github-theme merges upstream fix:
-  // https://github.com/JulianWowra/typedoc-github-theme/pull/7
-  customCss: "./scripts/typedoc-github-theme-fixes.css",
   ignoredHighlightLanguages: ["mermaid"],
 };
 
