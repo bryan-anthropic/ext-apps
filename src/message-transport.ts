@@ -82,7 +82,17 @@ export class PostMessageTransport implements Transport {
       if (parsed.success) {
         console.debug("Parsed message", parsed.data);
         this.onmessage?.(parsed.data);
+      } else if (event.data?.jsonrpc !== "2.0") {
+        // Not a JSON-RPC message at all (e.g. internal frames injected by
+        // the host environment). Ignore silently so the transport stays alive.
+        console.debug(
+          "Ignoring non-JSON-RPC message",
+          parsed.error.message,
+          event,
+        );
       } else {
+        // Has jsonrpc: "2.0" but is otherwise malformed — surface as a real
+        // protocol error.
         console.error("Failed to parse message", parsed.error.message, event);
         this.onerror?.(
           new Error(

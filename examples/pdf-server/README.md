@@ -63,7 +63,10 @@ On some host platforms, tool calls have size limits, so large PDFs cannot be sen
 ```typescript
 // Load in chunks with progress
 while (hasMore) {
-  const chunk = await app.callServerTool("read_pdf_bytes", { url, offset });
+  const chunk = await app.callServerTool({
+    name: "read_pdf_bytes",
+    arguments: { url, offset },
+  });
   chunks.push(base64ToBytes(chunk.bytes));
   offset += chunk.byteCount;
   hasMore = chunk.hasMore;
