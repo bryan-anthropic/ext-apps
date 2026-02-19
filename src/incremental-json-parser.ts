@@ -304,10 +304,7 @@ export class IncrementalJsonParser {
 
     // Determine the base raw string (trimming trailing comma if needed).
     let rawBase: string;
-    if (
-      this.trailingCommaIndex >= 0 &&
-      this.tokenType === TokenType.NONE
-    ) {
+    if (this.trailingCommaIndex >= 0 && this.tokenType === TokenType.NONE) {
       rawBase = this.raw.substring(0, this.trailingCommaIndex);
     } else {
       rawBase = this.raw;
@@ -315,9 +312,7 @@ export class IncrementalJsonParser {
 
     let suffix = "";
     const topFrame =
-      this.stack.length > 0
-        ? this.stack[this.stack.length - 1]!
-        : null;
+      this.stack.length > 0 ? this.stack[this.stack.length - 1]! : null;
 
     // Step 1 — close the current token (if any).
     switch (this.tokenType) {
@@ -764,9 +759,7 @@ export class IncrementalJsonParser {
 
   /** Top stack frame, or `null` if the stack is empty. */
   private topFrame(): StackFrame | null {
-    return this.stack.length > 0
-      ? this.stack[this.stack.length - 1]!
-      : null;
+    return this.stack.length > 0 ? this.stack[this.stack.length - 1]! : null;
   }
 
   /** Mark the trailing comma as consumed (a new key/value has started). */

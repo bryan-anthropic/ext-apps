@@ -138,9 +138,7 @@ describe("IncrementalJsonParser", () => {
 
     it("heals deeply nested structure", () => {
       parser.write('{"a": {"b": {"c": [1, {"d": "e');
-      expect(parser.getHealed()).toBe(
-        '{"a": {"b": {"c": [1, {"d": "e"}]}}}',
-      );
+      expect(parser.getHealed()).toBe('{"a": {"b": {"c": [1, {"d": "e"}]}}}');
     });
 
     it("heals nested trailing commas", () => {
@@ -386,7 +384,7 @@ describe("IncrementalJsonParser", () => {
       const steps = [
         ['{"lo', '{"lo": null}'],
         ['cation": "N', '{"location": "N"}'],
-        ['ew Yor', '{"location": "New Yor"}'],
+        ["ew Yor", '{"location": "New Yor"}'],
         ['k", "units": "met', '{"location": "New York", "units": "met"}'],
         ['ric"}', '{"location": "New York", "units": "metric"}'],
       ] as const;
