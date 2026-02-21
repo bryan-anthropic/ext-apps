@@ -1,0 +1,56 @@
+name: Build PDF Server MCPB
+
+on:
+  push:
+    paths:
+      - 'examples/pdf-server/**'
+    tags:
+      - 'pdf-server-v*'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: examples/pdf-server
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Remove dev dependencies
+        run: npm prune --production
+
+      - name: Pack MCPB
+        run: npx @anthropic-ai/mcpb@latest pack .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pdf-server-mcpb
+          path: examples/pdf-server/*.mcpb
+          retention-days: 30
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/pdf-server-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: examples/pdf-server/*.mcpb

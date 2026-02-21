@@ -1,0 +1,33 @@
+# Source (dist/ has bundled output)
+src/
+*.ts
+tsconfig*.json
+vite.config.*
+
+# Root-level HTML template (dist/mcp-app.html is the built version)
+/mcp-app.html
+
+# Dev/test
+*.test.*
+*.spec.*
+__tests__/
+jest.config.*
+vitest.config.*
+.eslintrc*
+.prettierrc*
+
+# Screenshots and non-icon images
+screenshot.*
+grid-cell.*
+pdf-icon.svg
+*.svg
+
+# Docs (README stays for directory listing)
+CHANGELOG*
+CONTRIBUTING*
+docs/
+
+# Build artifacts
+*.tsbuildinfo
+coverage/
+node_modules/
