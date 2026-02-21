@@ -30,13 +30,13 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install all dependencies (ignore root postinstall scripts)
+        run: npm install --ignore-scripts
 
-      - name: Build
+      - name: Build pdf-server
         run: npm run build
 
-      - name: Remove dev dependencies
+      - name: Prune to production dependencies
         run: npm prune --production
 
       - name: Pack MCPB
