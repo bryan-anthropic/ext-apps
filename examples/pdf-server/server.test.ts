@@ -126,6 +126,33 @@ describe("PDF Cache with Timeouts", () => {
       }
     });
 
+    it("should fall back to GET when server returns 501 for Range request", async () => {
+      const fullData = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d]); // %PDF-
+
+      const mockFetch = spyOn(globalThis, "fetch")
+        // First call: Range request returns 501
+        .mockResolvedValueOnce(
+          new Response("Unsupported client Range", { status: 501 }),
+        )
+        // Second call: plain GET returns full body
+        .mockResolvedValueOnce(
+          new Response(fullData, {
+            status: 200,
+            headers: { "Content-Type": "application/pdf" },
+          }),
+        );
+
+      try {
+        const result = await pdfCache.readPdfRange(testUrl, 0, 1024);
+        expect(result.data).toEqual(fullData);
+        expect(result.totalBytes).toBe(fullData.length);
+        expect(pdfCache.getCacheSize()).toBe(1);
+        expect(mockFetch).toHaveBeenCalledTimes(2);
+      } finally {
+        mockFetch.mockRestore();
+      }
+    });
+
     it("should reject PDFs larger than max size limit", async () => {
       const hugeUrl = "https://arxiv.org/pdf/huge-pdf";
       // Create data larger than the limit

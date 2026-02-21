@@ -277,17 +277,21 @@ export function createPdfCache(): PdfCache {
       return sliceToChunk(cached, offset, clampedByteCount);
     }
 
-    // Remote URL - Range request
-    const response = await fetch(normalized, {
+    // Remote URL - try Range request, fall back to full GET if not supported
+    let response = await fetch(normalized, {
       headers: {
         Range: `bytes=${offset}-${offset + clampedByteCount - 1}`,
       },
     });
 
+    // If server doesn't support Range (501, 416, etc.), fall back to plain GET
     if (!response.ok && response.status !== 206) {
-      throw new Error(
-        `Range request failed: ${response.status} ${response.statusText}`,
-      );
+      response = await fetch(normalized);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch PDF: ${response.status} ${response.statusText}`,
+        );
+      }
     }
 
     // HTTP 200 means the server ignored our Range header and sent the full body.
@@ -478,6 +482,7 @@ Accepts:
       outputSchema: z.object({
         url: z.string(),
         initialPage: z.number(),
+        totalBytes: z.number(),
       }),
       _meta: { ui: { resourceUri: RESOURCE_URI } },
     },
@@ -492,11 +497,15 @@ Accepts:
         };
       }
 
+      // Probe file size so the client can set up range transport without an extra fetch
+      const { totalBytes } = await readPdfRange(normalized, 0, 1);
+
       return {
         content: [{ type: "text", text: `Displaying PDF: ${normalized}` }],
         structuredContent: {
           url: normalized,
           initialPage: page,
+          totalBytes,
         },
         _meta: {
           viewUUID: randomUUID(),
