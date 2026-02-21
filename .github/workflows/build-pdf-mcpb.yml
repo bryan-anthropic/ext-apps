@@ -30,8 +30,17 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
 
-      - name: Install all dependencies (ignore root postinstall scripts)
-        run: npm install --ignore-scripts
+      - name: Install dependencies (scoped to subpackage, not root monorepo)
+        run: |
+          # Copy package.json to a temp dir and install there to avoid
+          # root monorepo lifecycle scripts (prepare/postinstall).
+          # Then move node_modules back. This keeps all package scripts
+          # intact for dependencies that need postinstall hooks.
+          tmp=$(mktemp -d)
+          cp package.json package-lock.json "$tmp/" 2>/dev/null || cp package.json "$tmp/"
+          (cd "$tmp" && npm install)
+          mv "$tmp/node_modules" .
+          rm -rf "$tmp"
 
       - name: Build pdf-server
         run: npm run build
