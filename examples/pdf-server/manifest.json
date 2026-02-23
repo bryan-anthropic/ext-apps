@@ -25,9 +25,18 @@
     }
   },
   "tools": [
-    { "name": "list_pdfs", "description": "List available PDF files that can be displayed" },
-    { "name": "display_pdf", "description": "Display an interactive PDF viewer with search and navigation" },
-    { "name": "read_pdf_bytes", "description": "Read a range of bytes from a PDF file (max 512KB per request)" }
+    {
+      "name": "list_pdfs",
+      "description": "List available PDF files that can be displayed"
+    },
+    {
+      "name": "display_pdf",
+      "description": "Display an interactive PDF viewer with search and navigation"
+    },
+    {
+      "name": "read_pdf_bytes",
+      "description": "Read a range of bytes from a PDF file (max 512KB per request)"
+    }
   ],
   "keywords": ["pdf", "documents", "viewer", "reading"],
   "license": "MIT",

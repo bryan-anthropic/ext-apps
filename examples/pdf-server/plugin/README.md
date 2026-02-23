@@ -11,10 +11,10 @@ academic paper review, document analysis, and research workflows.
 
 ## Commands
 
-| Command | What it does |
-|---------|-------------|
-| `/pdf-research:read` | Open a PDF for reading |
-| `/pdf-research:summarize` | Summarize a document |
+| Command                   | What it does           |
+| ------------------------- | ---------------------- |
+| `/pdf-research:read`      | Open a PDF for reading |
+| `/pdf-research:summarize` | Summarize a document   |
 
 ## How It Works
 
